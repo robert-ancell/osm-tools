@@ -59,6 +59,8 @@ def reformat_number (number):
             return None
         area_code = number[1:i]
         number = number[i+1:]
+        if area_code[0] == '0':
+            area_code = area_code[1:]
     else:
         area_code = number[0]
         number = number[1:]
