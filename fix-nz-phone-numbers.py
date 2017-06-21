@@ -14,6 +14,10 @@ import xml.etree.ElementTree as ET
 tree = ET.parse ('phone-numbers.osm')
 
 def reformat_number (number):
+    # Blacklist known specially formatted numbers
+    if number in ['0508 CANLAW', '0800 83 83 83', '0800 80 50 10', '0800 77 88 98', '0800 30 40 50']:
+        return number
+
     # Strip out spaces
     stripped = ''
     for c in number:
@@ -37,6 +41,8 @@ def reformat_number (number):
     if number.startswith ('+64'):
         number = number[3:]
     elif number.startswith ('0064'):
+        number = number[4:]
+    elif number.startswith ('+064'):
         number = number[4:]
     elif number.startswith ('64 '):
         number = number[3:]
@@ -66,7 +72,7 @@ def reformat_number (number):
         number = number[1:]
 
     # Convert Cell numbers
-    if len (number) == 8 and area_code == '2':
+    if area_code == '2':
         area_code += number[0]
         number = number[1:]
 
@@ -76,14 +82,22 @@ def reformat_number (number):
     # Return in format +64 x xxx xxxx
     return '+64 ' + area_code + ' ' + number[:3] + ' ' + number[3:]
 
+def reformat_numbers (numbers):
+    n = numbers.split (';')
+    for i in xrange (len (n)):
+        n[i] = reformat_number (n[i])
+        if n[i] == None:
+            return None
+    return ';'.join (n)
+
 def fix_number (parent, element):
-    number = element.get ('v')
-    fixed = reformat_number (number)
-    if fixed == None:
-        print number + '?'
-    elif fixed != number:
-        print number + ' -> ' + fixed
-        element.set ('v', fixed)
+    phone = element.get ('v')
+    phone_fixed = reformat_numbers (phone)
+    if phone_fixed == None:
+        print phone + '?'
+    elif phone_fixed != phone:
+        print phone + ' -> ' + phone_fixed
+        element.set ('v', phone_fixed)
         parent.set ('action', 'modify')
 
 for e in tree.getroot ():
