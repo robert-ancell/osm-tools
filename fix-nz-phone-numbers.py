@@ -15,7 +15,7 @@ tree = ET.parse ('phone-numbers.osm')
 
 def reformat_number (number):
     # Blacklist known specially formatted numbers
-    if number in ['0508 CANLAW', '0800 83 83 83', '0800 80 50 10', '0800 77 88 98', '0800 30 40 50']:
+    if number in ['111', '0508 CANLAW', '0800 83 83 83', '0800 80 50 10', '0800 77 88 98', '0800 30 40 50', '+64 20 100 2000']:
         return number
 
     # Strip out spaces
@@ -33,7 +33,7 @@ def reformat_number (number):
     if number.startswith ('0800') or number.startswith ('0508'):
         prefix = number[:4]
         number = number[4:]
-        if len (number) != 6:
+        if len (number) < 6 or len (number) > 7:
             return None
         return prefix + ' ' + number[:3] + ' ' + number[3:]
 
@@ -74,13 +74,21 @@ def reformat_number (number):
     # Convert Cell numbers
     if area_code == '2':
         area_code += number[0]
+        if len (number) < 7 or len (number) > 9:
+            return None
         number = number[1:]
+        if area_code[1] == '0':
+            area_code += number[0]
+            number = number[1:]
+    else:
+        if len (number) != 7:
+            return None
 
-    if len (number) != 7:
-        return None
-
-    # Return in format +64 x xxx xxxx
-    return '+64 ' + area_code + ' ' + number[:3] + ' ' + number[3:]
+    # Return in format +64 x xxx xxxx or +64 x xxxx xxxx
+    if len (number) > 7:
+        return '+64 ' + area_code + ' ' + number[:4] + ' ' + number[4:]
+    else:
+        return '+64 ' + area_code + ' ' + number[:3] + ' ' + number[3:]
 
 def reformat_numbers (numbers):
     n = numbers.split (';')
